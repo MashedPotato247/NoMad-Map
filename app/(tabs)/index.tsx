@@ -1,75 +1,126 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { StyleSheet, View, Text, Modal, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import MapComponent from '@/src/components/map/MapComponent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useLocation, LocationData } from '@/src/context/LocationContext';
+import { FontAwesome } from '@expo/vector-icons';
 
-export default function HomeScreen() {
+export default function MapScreen() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const { selectedLocation } = useLocation();
+  
+  const backgroundColor = useThemeColor({ light: '#fff', dark: '#000' }, 'background');
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+
+  const handleMarkerPress = (location: LocationData) => {
+    setModalVisible(true);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      
+      {/* Map Component */}
+      <MapComponent onMarkerPress={handleMarkerPress} />
+      
+      {/* Location Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <TouchableOpacity 
+            activeOpacity={1} 
+            onPress={(e) => e.stopPropagation()}
+            style={[styles.modalContainer, { backgroundColor }]}
+          >
+            <View style={styles.modalHeader}>
+              <ThemedText type="title" style={styles.modalTitle}>
+                {selectedLocation?.name || 'Location Details'}
+              </ThemedText>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <FontAwesome name="close" size={24} color={textColor} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <ThemedText>{selectedLocation?.description || 'No description available.'}</ThemedText>
+              
+              <View style={styles.actionButtons}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <FontAwesome name="heart-o" size={20} color={textColor} />
+                  <ThemedText style={styles.actionText}>Save</ThemedText>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.actionButton}>
+                  <FontAwesome name="comment-o" size={20} color={textColor} />
+                  <ThemedText style={styles.actionText}>Comment</ThemedText>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.actionButton}>
+                  <FontAwesome name="share" size={20} color={textColor} />
+                  <ThemedText style={styles.actionText}>Share</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+    minHeight: '40%',
+    maxHeight: '60%',
+  },
+  modalHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 15,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  modalContent: {
+    flex: 1,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+    paddingVertical: 10,
+  },
+  actionButton: {
+    alignItems: 'center',
+  },
+  actionText: {
+    marginTop: 5,
+    fontSize: 12,
+  },
+});
 });

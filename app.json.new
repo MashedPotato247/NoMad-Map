@@ -47,19 +47,6 @@
         }
       ],
       [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsImpl": "mapbox",
-          "RNMapboxMapsDownloadToken": "sk.freeToken"
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "NomadMap needs access to your camera to let you take photos of locations."
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
